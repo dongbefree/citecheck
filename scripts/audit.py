@@ -89,8 +89,9 @@ def units(note: str) -> list[dict]:
                     "complete": complete, "is_full": bool(place and pub),
                     "raw": note[h.start():end].strip()})
 
-    # Quoted article titles with no italic venue: Döring（"Seeing What to Do", 2007）
-    # carries no italics at all, so the loop above never sees it.
+    # Quoted article titles with no italic venue: a note of the form
+    # Author, "Article Title", 2007 carries no italics at all, so the loop
+    # above never sees it.
     for m in re.finditer(r'[“"]([^”"]{4,140})[”"]\s*[,，]\s*(\d{4})', note):
         # skip when the quote is the article title of "*Journal* Vol (Year)" --
         # that case is already handled above

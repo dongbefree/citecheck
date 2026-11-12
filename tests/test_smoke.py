@@ -48,7 +48,7 @@ def test_docx() -> None:
         joined = "\n".join(comments)
         # Defect 1: note 5 is never cited in the body.
         check("孤儿注释" in joined and "[5]" in joined, "orphan note 5 reported")
-        # Defect 2: note 4 gives no place/publisher for Kenny.
+        # Defect 2: note 4 gives no place/publisher, and is that work's only appearance.
         check("未给全称" in joined, "note 4 missing publication data reported")
         # The source must stay untouched: output is a sibling copy, never in-place.
         check(r.returncode == 0 and "批注已写入" in r.stdout, "report printed")
@@ -58,11 +58,11 @@ def test_markdown() -> None:
     print("markdown back-end")
     md = """# Title
 
-Body text claims something.\\u00a0
+Body text claims something.
 
 ## 脚注
 
-[1] Thomas Hobbes, *Leviathan*, ed. Noel Malcolm (Oxford: Clarendon Press, 2012), ch. 6.
+[1] A. N. Author, *Studies in a Problem* (Oxford: Example Press, 2012), ch. 6.
 
 [2] An orphan note that the body never cites.
 """

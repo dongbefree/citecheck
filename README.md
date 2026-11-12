@@ -20,13 +20,15 @@ python3 scripts/docx_audit.py 稿件.docx
 
 这是我最初的想法，实测后放弃了。对 14 种真实文献做 Crossref + Open Library 核对，系统报出 7 条"记录存在但字段不符"，逐条人工复核后——**7 条全是假警报，真实错误 0 条**：
 
-| 引用 | 系统报的不符 | 实情 |
+| 引用（已脱敏） | 系统报的不符 | 实情 |
 |---|---|---|
-| Hobbes, *Leviathan*, Clarendon 2012 | 记录为 Bloomsbury 2020 | 2012 年版真实存在，只是另一个条目 |
-| James, *Passion and Action* 1997 | 记录为 *Hume, Passion, and Action* 2018 | 同名不同书，题名相似度 0.88 越过阈值 |
-| Zarka, *La décision métaphysique de Hobbes* 1987 | 记录为 Informa 1989 | 命中的是这本书的**书评** |
-| Dretske, *Knowledge and the Flow of Information* 1981 | 记录为 UChicago 2021 | 命中的是 2021 年**重印本** |
-| Fodor & Lepore, *Holism* 1992 | 记录为 JSTOR 1994 | 命中的又是**书评** |
+| 一部 2012 年英国大学出版社的政治哲学专著 | 记录为 2020 年另一出版社版本 | 2012 年版真实存在，只是另一个条目 |
+| 一部 1997 年的哲学专著 | 记录为 2018 年另一本同名词专著 | 同名不同书，题名相似度 0.88 越过阈值 |
+| 一部 1987 年法国出版的法文专著 | 记录为 1989 年另一出版社 | 命中的是这本书的**书评** |
+| 一部 1981 年美国大学出版社的心灵哲学专著 | 记录为 2021 年另一大学出版社 | 命中的是 2021 年**重印本** |
+| 一部 1992 年的合著 | 记录为 JSTOR 1994 | 命中的又是**书评** |
+
+> 表格按引用类型脱敏。测试语料是作者本人未发表稿件里的 14 条引用，具体书名不在公开范围内——但上表每一行都是实际发生的误判，没有一条是编出来的例子。
 
 三个结构性原因，不是调参能解决的：
 
@@ -38,18 +40,27 @@ python3 scripts/docx_audit.py 稿件.docx
 
 ## 安装
 
-### 作为 WorkBuddy Skill
+`SKILL.md` 遵循 Agent Skills 开放标准，因此同一份目录可以丢进任何认这个标准的工具。区别只在放到哪儿。
 
 ```bash
 git clone https://github.com/dongbefree/citecheck.git
-cp -r citecheck ~/.workbuddy/skills/citecheck
 ```
 
-目录名与 `SKILL.md` 里的 `name` 字段保持一致（`citecheck`）。之后在会话里说"查一下这份 Word 的脚注"即可触发。
+| 运行时 | 安装位置 | 命令 |
+|---|---|---|
+| WorkBuddy | `~/.workbuddy/skills/` | `cp -r citecheck ~/.workbuddy/skills/citecheck` |
+| Claude Code（个人级） | `~/.claude/skills/` | `cp -r citecheck ~/.claude/skills/citecheck` |
+| Claude Code（项目级） | 仓库内 `.claude/skills/` | `mkdir -p .claude/skills && cp -r citecheck .claude/skills/` |
+
+目录名与 `SKILL.md` 里的 `name` 字段都保持 `citecheck`。在 Claude Code 里，这个目录名就是你敲的 `/citecheck`。
+
+装好后在会话里说"查一下这份 Word 的脚注"，或直接 `/citecheck`。
+
+frontmatter 里的 `display_name`、`tags`、`category` 是 WorkBuddy 用的，其他工具不读也不受影响；`description` 是唯一所有工具都依赖的字段，改动它之前先想清楚触发语会不会变。
 
 ### 直接当脚本用
 
-只依赖 `python-docx`（需 1.2.0 以上，批注 API 才有）：
+不装 skill 也能跑。只依赖 `python-docx`（需 1.2.0 以上，批注 API 才有）：
 
 ```bash
 pip install -r requirements.txt
@@ -107,6 +118,8 @@ python3 tests/test_smoke.py
 ```
 
 用仓库里的 `samples/fixture.docx`（一份带已知缺陷的构造稿）断言必须报出 2 条：孤儿注 5、注 4 缺出版项。改动脚本后先跑这个。
+
+样本本身由 `tests/make_fixture.py` 生成，里面的文献全部是编造的，不含任何人的真实书目。要改样本结构，改那个脚本再重跑，不要手改 docx——手改会丢掉斜体运行属性，测试就测不到 `flavored()` 那条路径了。
 
 ## 已知限制
 
